@@ -1,152 +1,182 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import TodoInput from "../components/TodoInput";
 import TodoCard from "../components/TodoCard";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import toast from "react-hot-toast";
-
+import {
+  getTodos,
+  createTodo,
+  updateTodo,
+  deleteTodo,
+} from "../api/todos.api";
 
 function Dashboard() {
-
+  const [todos, setTodos] = useState([]);
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
-
-  function updateTodos(newTodos) {
-  setHistory([...history, todos]);
-  setFuture([]); // clear redo
-  setTodos(newTodos);
-}
-
-function undo() {
-  if (history.length === 0) return;
-
-  const previous = history[history.length - 1];
-  setHistory(history.slice(0, -1));
-  setFuture([todos, ...future]);
-  setTodos(previous);
-  toast("Undo applied");
-}
-
-function redo() {
-  if (future.length === 0) return;
-
-  const next = future[0];
-  setFuture(future.slice(1));
-  setHistory([...history, todos]);
-  setTodos(next);
-  toast("Redo applied");
-}
-
-
-  const [todos, setTodos] = useState(() => {
-    const saved = localStorage.getItem("todos");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
-
   const [filter, setFilter] = useState(
-    () => localStorage.getItem("filter") || "all",
+    () => localStorage.getItem("filter") || "all"
   );
 
+  /* ---------------- LOAD TODOS ---------------- */
+  useEffect(() => {
+    const loadTodos = async () => {
+      const data = await getTodos();
+      setTodos(data);
+    };
+    loadTodos();
+  }, []);
+
+  /* ---------------- FILTER PERSIST ---------------- */
   useEffect(() => {
     localStorage.setItem("filter", filter);
   }, [filter]);
 
+  /* ---------------- STATE UPDATE HELPER ---------------- */
+  const updateTodos = useCallback(
+    (newTodos) => {
+      if (filter === "all") {
+        setHistory((prev) => [...prev, todos]);
+        setFuture([]);
+      }
+      setTodos(newTodos);
+    },
+    [todos, filter]
+  );
+
+  /* ---------------- UNDO / REDO ---------------- */
+  const undo = useCallback(() => {
+    if (history.length === 0) return;
+
+    const previous = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setFuture((prev) => [todos, ...prev]);
+    setTodos(previous);
+    toast.success("Undo applied");
+  }, [history, todos]);
+
+  const redo = useCallback(() => {
+    if (future.length === 0) return;
+
+    const next = future[0];
+    setFuture((prev) => prev.slice(1));
+    setHistory((prev) => [...prev, todos]);
+    setTodos(next);
+    toast.success("Redo applied");
+  }, [future, todos]);
+
+  /* ---------------- KEYBOARD SHORTCUTS ---------------- */
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.ctrlKey && e.key === "z") undo();
+      if (e.ctrlKey && e.key === "y") redo();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
+
+  /* ---------------- DERIVED TODOS ---------------- */
   const sortedTodos = [...todos].sort((a, b) => a.order - b.order);
+
   const filteredTodos = sortedTodos.filter((todo) => {
     if (filter === "completed") return todo.completed;
     if (filter === "pending") return !todo.completed;
     return true;
   });
 
-  // CREATE
-  function addTodo(title) {
+  /* ---------------- CRUD OPERATIONS ---------------- */
+  const addTodo = async (title) => {
     const newTodo = {
       id: Date.now(),
       title,
       completed: false,
-      order: todos.length, // backend-ready
+      order: todos.length,
     };
-    setTodos([newTodo, ...todos]);
+
+    const updated = await createTodo(newTodo);
+    updateTodos(updated);
     toast.success("Todo added");
-  }
+  };
 
-  // DELETE
-  function deleteTodo(id) {
-    setTodos(todos.filter((todo) => todo.id !== id));
-    toast.error("Todo deleted");
-  }
+  const removeTodo = async (id) => {
+    const updated = await deleteTodo(id);
+    updateTodos(updated);
+    toast.success("Todo deleted");
+  };
 
-  // TOGGLE COMPLETE
-  function toggleTodo(id) {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
-      ),
-    );
-  }
+  const toggleTodo = async (id) => {
+    const todo = todos.find((t) => t.id === id);
+    const updated = await updateTodo({
+      ...todo,
+      completed: !todo.completed,
+    });
+    updateTodos(updated);
+  };
 
-  // EDIT
-  function editTodo(id, newTitle) {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, title: newTitle } : todo,
-      ),
-    );
-    toast("Todo updated");
-  }
+  const editTodo = async (id, newTitle) => {
+    const todo = todos.find((t) => t.id === id);
+    const updated = await updateTodo({
+      ...todo,
+      title: newTitle,
+    });
+    updateTodos(updated);
+    toast.success("Todo updated");
+  };
 
-  function handleDragEnd(result) {
+  /* ---------------- DRAG & DROP ---------------- */
+  const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
     const items = Array.from(todos);
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
 
-    // 🔥 Reassign order
-    const updated = items.map((todo, index) => ({
+    const reordered = items.map((todo, index) => ({
       ...todo,
       order: index,
     }));
 
-    updateTodos(updated);
-  }
+    const persisted = await Promise.all(
+      reordered.map((todo) => updateTodo(todo))
+    );
+
+    updateTodos(persisted);
+  };
+
+  /* ---------------- UI ---------------- */
   return (
     <div className="max-w-5xl mx-auto mt-10 px-4">
       <h1 className="text-3xl font-bold mb-6 dark:text-white">My Todos</h1>
 
-      {/* Undo/redo buttons */}
+      {/* Undo / Redo */}
       <div className="flex gap-3 mb-4">
-  <button
-    onClick={undo}
-    disabled={history.length === 0}
-    className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-  >
-    Undo
-  </button>
+        <button
+          onClick={undo}
+          disabled={history.length === 0}
+          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+        >
+          Undo
+        </button>
+        <button
+          onClick={redo}
+          disabled={future.length === 0}
+          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+        >
+          Redo
+        </button>
+      </div>
 
-  <button
-    onClick={redo}
-    disabled={future.length === 0}
-    className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-  >
-    Redo
-  </button>
-</div>
-
+      {/* Filters */}
       <div className="flex gap-3 mb-6">
         {["all", "completed", "pending"].map((type) => (
           <button
             key={type}
             onClick={() => setFilter(type)}
-            className={`px-4 py-1.5 rounded-full capitalize transition
-        ${
-          filter === type
-            ? "bg-blue-600 text-white"
-            : "bg-gray-200 dark:bg-gray-700 dark:text-white"
-        }`}
+            className={`px-4 py-1.5 rounded-full capitalize transition ${
+              filter === type
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 dark:bg-gray-700 dark:text-white"
+            }`}
           >
             {type}
           </button>
@@ -188,7 +218,7 @@ function redo() {
                       >
                         <TodoCard
                           todo={todo}
-                          deleteTodo={deleteTodo}
+                          deleteTodo={removeTodo}
                           toggleTodo={toggleTodo}
                           editTodo={editTodo}
                           dragHandleProps={provided.dragHandleProps}
