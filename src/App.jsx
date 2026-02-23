@@ -1,19 +1,17 @@
-import React, { useState } from "react";
-import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
-  const [user, setUser] = useState(null);
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar user={user} setUser={setUser} />
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Navbar />
+
       <Toaster
         position="top-right"
         toastOptions={{
@@ -25,20 +23,19 @@ const App = () => {
           },
         }}
       />
-      
-      <Routes> 
-        {/* Public routes */}
-        <Route path="/login" element={<Login setUser={setUser} /> } />
-        
+
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected routes */}
+        {/* Protected */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <Dashboard />
-              
             </ProtectedRoute>
           }
         />
@@ -46,7 +43,7 @@ const App = () => {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <Profile />
             </ProtectedRoute>
           }

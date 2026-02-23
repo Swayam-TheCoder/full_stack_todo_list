@@ -1,30 +1,23 @@
+// src/api/todos.api.js
 import api from "./axios";
 
-// TEMP: localStorage fallback
-export const getTodos = async () => {
-  const data = localStorage.getItem("todos");
-  return data ? JSON.parse(data) : [];
+export const getTodos = async (userId) => {
+  if (!userId) return []; // 🔥 critical guard
+  const res = await api.get(`/todos?userId=${userId}`);
+  return res.data; // MUST be array
 };
 
 export const createTodo = async (todo) => {
-  const todos = await getTodos();
-  const updated = [...todos, todo];
-  localStorage.setItem("todos", JSON.stringify(updated));
-  return updated;
+  const res = await api.post("/todos", todo);
+  return res.data;
 };
 
-export const updateTodo = async (updatedTodo) => {
-  const todos = await getTodos();
-  const updated = todos.map((t) =>
-    t.id === updatedTodo.id ? updatedTodo : t
-  );
-  localStorage.setItem("todos", JSON.stringify(updated));
-  return updated;
+export const updateTodo = async (todo) => {
+  const res = await api.put(`/todos/${todo._id}`, todo);
+  return res.data;
 };
 
 export const deleteTodo = async (id) => {
-  const todos = await getTodos();
-  const updated = todos.filter((t) => t.id !== id);
-  localStorage.setItem("todos", JSON.stringify(updated));
-  return updated;
+  const res = await api.delete(`/todos/${id}`);
+  return res.data;
 };

@@ -9,6 +9,8 @@ import {
   updateTodo,
   deleteTodo,
 } from "../api/todos.api";
+import { useAuth } from "../context/AuthContext";
+
 
 function Dashboard() {
   const [todos, setTodos] = useState([]);
@@ -18,12 +20,46 @@ function Dashboard() {
     () => localStorage.getItem("filter") || "all"
   );
 
+const { user } = useAuth();
+
+useEffect(() => {
+    if (!user) return; // 🔥 DO NOTHING until user exists
+
+    const loadTodos = async () => {
+      try {
+        const data = await getTodos(user._id);
+        setTodos(data);
+      } catch (err) {
+        toast.error("Failed to load todos");
+        console.error(err);
+      }
+    };
+
+    loadTodos();
+  }, [user]); // 🔥 DEPENDS ON USER
+
   /* ---------------- LOAD TODOS ---------------- */
   useEffect(() => {
     const loadTodos = async () => {
-      const data = await getTodos();
-      setTodos(data);
+      try {
+        const data = await getTodos();
+        const list = Array.isArray(data) ? data : [];
+
+        const normalized = list.map((todo, index) => ({
+          _id: todo._id,
+          id: todo._id ?? todo.id,
+          title: todo.title,
+          completed: Boolean(todo.completed),
+          order: todo.order ?? index,
+        }));
+
+        setTodos(normalized);
+      } catch (err) {
+        toast.error("Failed to load todos", err);
+        setTodos([]);
+      }
     };
+
     loadTodos();
   }, []);
 
@@ -35,32 +71,34 @@ function Dashboard() {
   /* ---------------- STATE UPDATE HELPER ---------------- */
   const updateTodos = useCallback(
     (newTodos) => {
+      const safe = Array.isArray(newTodos) ? newTodos : [];
+
       if (filter === "all") {
         setHistory((prev) => [...prev, todos]);
         setFuture([]);
       }
-      setTodos(newTodos);
+      setTodos(safe);
     },
     [todos, filter]
   );
 
   /* ---------------- UNDO / REDO ---------------- */
   const undo = useCallback(() => {
-    if (history.length === 0) return;
+    if (!history.length) return;
 
-    const previous = history[history.length - 1];
-    setHistory((prev) => prev.slice(0, -1));
-    setFuture((prev) => [todos, ...prev]);
+    const previous = history.at(-1);
+    setHistory((h) => h.slice(0, -1));
+    setFuture((f) => [todos, ...f]);
     setTodos(previous);
     toast.success("Undo applied");
   }, [history, todos]);
 
   const redo = useCallback(() => {
-    if (future.length === 0) return;
+    if (!future.length) return;
 
     const next = future[0];
-    setFuture((prev) => prev.slice(1));
-    setHistory((prev) => [...prev, todos]);
+    setFuture((f) => f.slice(1));
+    setHistory((h) => [...h, todos]);
     setTodos(next);
     toast.success("Redo applied");
   }, [future, todos]);
@@ -84,42 +122,55 @@ function Dashboard() {
     return true;
   });
 
-  /* ---------------- CRUD OPERATIONS ---------------- */
+  /* ---------------- CRUD ---------------- */
   const addTodo = async (title) => {
-    const newTodo = {
-      id: Date.now(),
+  try {
+    const data = await createTodo({
       title,
       completed: false,
       order: todos.length,
-    };
+      userId: user._id,
+    });
 
-    const updated = await createTodo(newTodo);
-    updateTodos(updated);
+    setTodos(data); // backend sends full list
     toast.success("Todo added");
-  };
+  } catch {
+    toast.error("Failed to add todo");
+  }
+};
 
   const removeTodo = async (id) => {
-    const updated = await deleteTodo(id);
-    updateTodos(updated);
-    toast.success("Todo deleted");
+    try {
+      await deleteTodo(id);
+      updateTodos(todos.filter((t) => t.id !== id));
+      toast.success("Todo deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
   };
 
   const toggleTodo = async (id) => {
     const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+
     const updated = await updateTodo({
       ...todo,
       completed: !todo.completed,
     });
-    updateTodos(updated);
+
+    updateTodos(
+      todos.map((t) => (t.id === id ? updated : t))
+    );
   };
 
-  const editTodo = async (id, newTitle) => {
+  const editTodo = async (id, title) => {
     const todo = todos.find((t) => t.id === id);
-    const updated = await updateTodo({
-      ...todo,
-      title: newTitle,
-    });
-    updateTodos(updated);
+    if (!todo) return;
+
+    const updated = await updateTodo({ ...todo, title });
+    updateTodos(
+      todos.map((t) => (t.id === id ? updated : t))
+    );
     toast.success("Todo updated");
   };
 
@@ -127,7 +178,7 @@ function Dashboard() {
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
-    const items = Array.from(todos);
+    const items = [...todos];
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
 
@@ -136,11 +187,13 @@ function Dashboard() {
       order: index,
     }));
 
-    const persisted = await Promise.all(
-      reordered.map((todo) => updateTodo(todo))
-    );
+    updateTodos(reordered);
 
-    updateTodos(persisted);
+    try {
+      await Promise.all(reordered.map((t) => updateTodo(t)));
+    } catch {
+      toast.error("Order sync failed");
+    }
   };
 
   /* ---------------- UI ---------------- */
@@ -148,36 +201,14 @@ function Dashboard() {
     <div className="max-w-5xl mx-auto mt-10 px-4">
       <h1 className="text-3xl font-bold mb-6 dark:text-white">My Todos</h1>
 
-      {/* Undo / Redo */}
       <div className="flex gap-3 mb-4">
-        <button
-          onClick={undo}
-          disabled={history.length === 0}
-          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-        >
-          Undo
-        </button>
-        <button
-          onClick={redo}
-          disabled={future.length === 0}
-          className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-        >
-          Redo
-        </button>
+        <button onClick={undo} disabled={!history.length}>Undo</button>
+        <button onClick={redo} disabled={!future.length}>Redo</button>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-3 mb-6">
         {["all", "completed", "pending"].map((type) => (
-          <button
-            key={type}
-            onClick={() => setFilter(type)}
-            className={`px-4 py-1.5 rounded-full capitalize transition ${
-              filter === type
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 dark:bg-gray-700 dark:text-white"
-            }`}
-          >
+          <button key={type} onClick={() => setFilter(type)}>
             {type}
           </button>
         ))}
@@ -187,23 +218,17 @@ function Dashboard() {
 
       {filteredTodos.length === 0 ? (
         <p className="text-center text-gray-500 mt-20">
-          🎉 No todos yet. Add your first task!
+          🎉 No todos yet.
         </p>
       ) : (
-        <DragDropContext
-          onDragEnd={filter === "all" ? handleDragEnd : () => {}}
-        >
+        <DragDropContext onDragEnd={filter === "all" ? handleDragEnd : () => {}}>
           <Droppable droppableId="todos">
             {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"
-              >
+              <div ref={provided.innerRef} {...provided.droppableProps}>
                 {filteredTodos.map((todo, index) => (
                   <Draggable
                     key={todo.id}
-                    draggableId={todo.id.toString()}
+                    draggableId={String(todo.id)}
                     index={index}
                     isDragDisabled={filter !== "all"}
                   >
@@ -211,10 +236,6 @@ function Dashboard() {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        style={{
-                          ...provided.draggableProps.style,
-                          transition: "transform 200ms ease",
-                        }}
                       >
                         <TodoCard
                           todo={todo}

@@ -1,30 +1,43 @@
+import { useState } from "react";
+import { registerUser } from "../api/auth.api";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
 function Signup() {
+  const [form, setForm] = useState({});
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await registerUser(form);
+      toast.success("Account created");
+      navigate("/");
+    } catch {
+      toast.error("Signup failed");
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto mt-20 bg-white p-6 rounded-xl shadow">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Signup</h2>
-
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-20">
       <input
-        type="text"
         placeholder="Name"
-        className="w-full border px-3 py-2 rounded mb-3"
+        className="input"
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
       />
-
       <input
-        type="email"
         placeholder="Email"
-        className="w-full border px-3 py-2 rounded mb-3"
+        className="input mt-3"
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
       />
-
       <input
         type="password"
         placeholder="Password"
-        className="w-full border px-3 py-2 rounded mb-4"
+        className="input mt-3"
+        onChange={(e) => setForm({ ...form, password: e.target.value })}
       />
-
-      <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Create Account
-      </button>
-    </div>
+      <button className="btn-primary mt-4 w-full">Signup</button>
+    </form>
   );
 }
 
