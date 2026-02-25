@@ -26,7 +26,8 @@ function Login() {
 };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-20">
+    <form onSubmit={handleSubmit} className="glass max-w-md mx-auto mt-24 p-8 space-y-4">
+      <h2 className="text-2xl font-bold text-center mb-4">Welcome Back👋</h2>
       <input
         placeholder="Email"
         className="input"
@@ -38,7 +39,7 @@ function Login() {
         className="input mt-3"
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button className="btn-primary mt-4 w-full">Login</button>
+      <button className="btn-primary mt-4 w-full neon">Login</button>
     </form>
   );
 }

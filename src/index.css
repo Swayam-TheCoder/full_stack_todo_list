@@ -1,3 +1,55 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: 220 23% 97%;
+  --card: 0 0% 100%;
+  --primary: 222 89% 60%;
+  --accent: 270 80% 65%;
+}
+
+body {
+  @apply min-h-screen bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 text-gray-800;
+}
+
+/* 🔥 Reusable UI */
+.input {
+  @apply w-full px-4 py-3 rounded-xl bg-white/70 backdrop-blur border border-gray-300
+  focus:outline-none focus:ring-2 focus:ring-blue-500 transition;
+}
+
+.btn-primary {
+  @apply px-5 py-3 rounded-xl font-semibold text-white
+  bg-gradient-to-r from-blue-600 to-purple-600
+  hover:scale-105 hover:shadow-lg active:scale-95 transition;
+}
+
+.glass {
+  @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-xl;
+}
+
+.input {
+    @apply w-full px-4 py-3 rounded-xl bg-white/80 dark:bg-gray-900/80
+    border border-gray-300 dark:border-gray-700
+    text-gray-800 dark:text-white
+    focus:outline-none focus:ring-2 focus:ring-blue-500
+    backdrop-blur-md transition;
+  }
+
+  .btn-primary {
+    @apply px-5 py-3 rounded-xl font-semibold
+    bg-gradient-to-r from-blue-600 to-purple-600
+    text-white hover:scale-[1.03] hover:shadow-xl
+    active:scale-95 transition-all duration-200;
+  }
+
+  .glass {
+    @apply bg-white/70 dark:bg-gray-900/70
+    backdrop-blur-xl border border-white/20
+    shadow-xl rounded-2xl;
+  }
+
+  .neon {
+    box-shadow: 0 0 20px rgba(99,102,241,0.6);
+  }

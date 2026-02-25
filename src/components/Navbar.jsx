@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
 import DarkToggle from "./DarkToggle";
 
 function Navbar({ user, setUser }) {
@@ -12,62 +11,56 @@ function Navbar({ user, setUser }) {
   }
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-        {/* Left */}
-        <h1 className="text-xl font-bold text-blue-600">TodoPro</h1>
+    <nav className="sticky top-0 z-50 glass neon">
+  <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+      TodoPro ⚡
+    </h1>
 
-        {/* Right */}
-        {user ? (
-          <div className="relative">
-            {/* Avatar Button */}
+    {user ? (
+      <div className="relative">
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600
+          text-white font-bold flex items-center justify-center shadow-lg hover:scale-110 transition"
+        >
+          {user.name[0]}
+        </button>
+
+        {open && (
+          <div className="absolute right-0 mt-3 w-48 glass animate-fade-in">
+            <div className="px-4 py-3 text-sm border-b border-white/20">
+              Signed in as
+              <div className="font-bold">{user.name}</div>
+            </div>
+
+            <Link className="block px-4 py-2 hover:bg-white/10" to="/profile">
+              Profile
+            </Link>
+
             <button
-              onClick={() => setOpen(!open)}
-              className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center"> 
-              {user.name[0]}
-            </button>
-
-            {/* Dropdown */}
-            {open && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-lg">
-                <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                  Signed in as <br />
-                  <b>{user.name}</b>
-                </div>
-
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  Profile
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex gap-4">
-            <Link to="/login" className="text-gray-600 hover:text-blue-600">
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700"
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 text-red-400 hover:bg-white/10"
             >
-              Signup
-            </Link>
+              Logout
+            </button>
           </div>
         )}
-        {/* Dark Mode Toggle */}
-        <DarkToggle />
       </div>
-    </nav>
+    ) : (
+      <div className="flex gap-4">
+        <Link className="btn-primary" to="/login">
+          Login
+        </Link>
+        <Link to="/signup" className="btn-primary">
+          Signup
+        </Link>
+      </div>
+    )}
+
+    <DarkToggle />
+  </div>
+</nav>
   );
 }
 

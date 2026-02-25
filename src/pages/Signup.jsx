@@ -19,7 +19,8 @@ function Signup() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-20">
+    <form onSubmit={handleSubmit} className="glass max-w-md mx-auto mt-24 p-8 space-y-4">
+      <h2 className="text-2xl font-bold text-center mb-4">Welcome👋</h2>
       <input
         placeholder="Name"
         className="input"
@@ -36,7 +37,7 @@ function Signup() {
         className="input mt-3"
         onChange={(e) => setForm({ ...form, password: e.target.value })}
       />
-      <button className="btn-primary mt-4 w-full">Signup</button>
+      <button className="btn-primary mt-4 w-full neon">Signup</button>
     </form>
   );
 }

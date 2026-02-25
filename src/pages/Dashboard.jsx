@@ -192,46 +192,102 @@ function Dashboard() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="max-w-5xl mx-auto mt-10 px-4">
-      <h1 className="text-3xl font-bold mb-6 dark:text-white">My Todos</h1>
+  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50
+                  dark:from-gray-900 dark:via-gray-950 dark:to-black transition-colors">
 
-      <div className="flex gap-3 mb-4">
-        <button onClick={undo} disabled={!history.length}>
-          Undo
-        </button>
-        <button onClick={redo} disabled={!future.length}>
-          Redo
-        </button>
+    <div className="max-w-5xl mx-auto px-6 py-10">
+
+      {/* ---------- HEADER ---------- */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <h1 className="text-4xl font-extrabold tracking-tight
+                       bg-gradient-to-r from-indigo-500 to-purple-600
+                       bg-clip-text text-transparent">
+          My Todos
+        </h1>
+
+        {/* Undo / Redo */}
+        <div className="flex gap-3">
+          <button
+            onClick={undo}
+            disabled={!history.length}
+            className="px-4 py-2 rounded-xl font-medium
+                       bg-white/70 dark:bg-gray-800/70 backdrop-blur
+                       shadow hover:shadow-lg hover:scale-105
+                       disabled:opacity-40 disabled:cursor-not-allowed
+                       transition"
+          >
+            Undo ⏪
+          </button>
+
+          <button
+            onClick={redo}
+            disabled={!future.length}
+            className="px-4 py-2 rounded-xl font-medium
+                       bg-white/70 dark:bg-gray-800/70 backdrop-blur
+                       shadow hover:shadow-lg hover:scale-105
+                       disabled:opacity-40 disabled:cursor-not-allowed
+                       transition"
+          >
+            Redo ⏩
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-3 mb-6">
+      {/* ---------- FILTERS ---------- */}
+      <div className="flex gap-3 mb-8">
         {["all", "completed", "pending"].map((type) => (
-          <button key={type} onClick={() => setFilter(type)}>
+          <button
+            key={type}
+            onClick={() => setFilter(type)}
+            className={`px-5 py-2 rounded-full capitalize font-semibold transition-all
+              ${
+                filter === type
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg scale-105"
+                  : "bg-white/60 dark:bg-gray-800/60 backdrop-blur hover:scale-105"
+              }`}
+          >
             {type}
           </button>
         ))}
       </div>
 
-      <TodoInput addTodo={addTodo} />
+      {/* ---------- INPUT ---------- */}
+      <div className="mb-10">
+        <TodoInput addTodo={addTodo} />
+      </div>
 
+      {/* ---------- EMPTY STATE ---------- */}
       {filteredTodos.length === 0 ? (
-        <p className="text-center text-gray-500 mt-20">🎉 No todos yet.</p>
+        <div className="mt-24 text-center">
+          <p className="text-6xl mb-4">🎉</p>
+          <p className="text-xl text-gray-500 dark:text-gray-400">
+            No todos yet. Add your first task!
+          </p>
+        </div>
       ) : (
+        /* ---------- TODO LIST ---------- */
         <DragDropContext
           onDragEnd={filter === "all" ? handleDragEnd : () => {}}
         >
           <Droppable droppableId="todos">
             {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="space-y-5"
+              >
                 {filteredTodos.map((todo, index) => (
                   <Draggable
-                    key={todo.id}
-                    draggableId={String(todo.id)}
+                    key={todo._id}
+                    draggableId={String(todo._id)}
                     index={index}
                     isDragDisabled={filter !== "all"}
                   >
                     {(provided) => (
-                      <div ref={provided.innerRef} {...provided.draggableProps}>
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                      >
                         <TodoCard
                           todo={todo}
                           deleteTodo={removeTodo}
@@ -250,7 +306,8 @@ function Dashboard() {
         </DragDropContext>
       )}
     </div>
-  );
+  </div>
+);
 }
 
 export default Dashboard;

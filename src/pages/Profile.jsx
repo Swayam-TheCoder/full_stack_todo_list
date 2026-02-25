@@ -1,12 +1,12 @@
 function Profile() {
   return (
-    <div className="max-w-md mx-auto mt-20 bg-white p-6 rounded-xl shadow">
-      <h2 className="text-2xl font-semibold mb-4">Profile</h2>
+    <div className="glass max-w-md mx-auto mt-24 p-8 text-center">
+      <h2 className="text-2xl font-bold mb-4">Profile</h2>
 
-      <p><b>Name:</b> Swayam</p>
-      <p><b>Email:</b> swayam@email.com</p>
+      <p className="text-lg"><b>Name:</b> Swayam</p>
+      <p className="text-lg"><b>Email:</b> swayam@email.com</p>
     </div>
   );
 }
 
-export default Profile;
+export default Profile; 
