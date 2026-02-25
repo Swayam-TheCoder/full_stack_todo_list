@@ -3,27 +3,23 @@ import TodoInput from "../components/TodoInput";
 import TodoCard from "../components/TodoCard";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import toast from "react-hot-toast";
-import {
-  getTodos,
-  createTodo,
-  updateTodo,
-  deleteTodo,
-} from "../api/todos.api";
+import { getTodos, createTodo, updateTodo, deleteTodo } from "../api/todos.api";
 import { useAuth } from "../context/AuthContext";
-
 
 function Dashboard() {
   const [todos, setTodos] = useState([]);
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
   const [filter, setFilter] = useState(
-    () => localStorage.getItem("filter") || "all"
+    () => localStorage.getItem("filter") || "all",
   );
 
-const { user } = useAuth();
+  const { user } = useAuth();
 
-useEffect(() => {
-    if (!user) return; // 🔥 DO NOTHING until user exists
+  useEffect(() => {
+    if (!user) {
+      return <p className="text-center mt-20">Loading user...</p>;
+    } // 🔥 DO NOTHING until user exists
 
     const loadTodos = async () => {
       try {
@@ -40,28 +36,19 @@ useEffect(() => {
 
   /* ---------------- LOAD TODOS ---------------- */
   useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        const data = await getTodos();
-        const list = Array.isArray(data) ? data : [];
+  if (!user || !user._id) return;
 
-        const normalized = list.map((todo, index) => ({
-          _id: todo._id,
-          id: todo._id ?? todo.id,
-          title: todo.title,
-          completed: Boolean(todo.completed),
-          order: todo.order ?? index,
-        }));
+  const loadTodos = async () => {
+    try {
+      const data = await getTodos(user._id);
+      setTodos(data);
+    } catch (err) {
+      toast.error("Failed to load todos",err);
+    }
+  };
 
-        setTodos(normalized);
-      } catch (err) {
-        toast.error("Failed to load todos", err);
-        setTodos([]);
-      }
-    };
-
-    loadTodos();
-  }, []);
+  loadTodos();
+}, [user]);
 
   /* ---------------- FILTER PERSIST ---------------- */
   useEffect(() => {
@@ -79,7 +66,7 @@ useEffect(() => {
       }
       setTodos(safe);
     },
-    [todos, filter]
+    [todos, filter],
   );
 
   /* ---------------- UNDO / REDO ---------------- */
@@ -124,20 +111,32 @@ useEffect(() => {
 
   /* ---------------- CRUD ---------------- */
   const addTodo = async (title) => {
-  try {
-    const data = await createTodo({
-      title,
-      completed: false,
-      order: todos.length,
-      userId: user._id,
-    });
+    if (!user || !user._id) {
+      toast.error("User not ready");
+      return;
+    }
 
-    setTodos(data); // backend sends full list
-    toast.success("Todo added");
-  } catch {
-    toast.error("Failed to add todo");
-  }
-};
+    try {
+      const newTodo = {
+        title,
+        completed: false,
+        order: todos.length,
+        userId: user._id, // 🔥 REQUIRED
+      };
+
+      const updatedTodos = await createTodo(newTodo);
+
+      if (!Array.isArray(updatedTodos)) {
+        throw new Error("Invalid response from backend");
+      }
+
+      setTodos(updatedTodos);
+      toast.success("Todo added");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to add todo");
+    }
+  };
 
   const removeTodo = async (id) => {
     try {
@@ -158,9 +157,7 @@ useEffect(() => {
       completed: !todo.completed,
     });
 
-    updateTodos(
-      todos.map((t) => (t.id === id ? updated : t))
-    );
+    updateTodos(todos.map((t) => (t.id === id ? updated : t)));
   };
 
   const editTodo = async (id, title) => {
@@ -168,9 +165,7 @@ useEffect(() => {
     if (!todo) return;
 
     const updated = await updateTodo({ ...todo, title });
-    updateTodos(
-      todos.map((t) => (t.id === id ? updated : t))
-    );
+    updateTodos(todos.map((t) => (t.id === id ? updated : t)));
     toast.success("Todo updated");
   };
 
@@ -202,8 +197,12 @@ useEffect(() => {
       <h1 className="text-3xl font-bold mb-6 dark:text-white">My Todos</h1>
 
       <div className="flex gap-3 mb-4">
-        <button onClick={undo} disabled={!history.length}>Undo</button>
-        <button onClick={redo} disabled={!future.length}>Redo</button>
+        <button onClick={undo} disabled={!history.length}>
+          Undo
+        </button>
+        <button onClick={redo} disabled={!future.length}>
+          Redo
+        </button>
       </div>
 
       <div className="flex gap-3 mb-6">
@@ -217,11 +216,11 @@ useEffect(() => {
       <TodoInput addTodo={addTodo} />
 
       {filteredTodos.length === 0 ? (
-        <p className="text-center text-gray-500 mt-20">
-          🎉 No todos yet.
-        </p>
+        <p className="text-center text-gray-500 mt-20">🎉 No todos yet.</p>
       ) : (
-        <DragDropContext onDragEnd={filter === "all" ? handleDragEnd : () => {}}>
+        <DragDropContext
+          onDragEnd={filter === "all" ? handleDragEnd : () => {}}
+        >
           <Droppable droppableId="todos">
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
@@ -233,10 +232,7 @@ useEffect(() => {
                     isDragDisabled={filter !== "all"}
                   >
                     {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                      >
+                      <div ref={provided.innerRef} {...provided.draggableProps}>
                         <TodoCard
                           todo={todo}
                           deleteTodo={removeTodo}

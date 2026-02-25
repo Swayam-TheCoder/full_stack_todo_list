@@ -11,20 +11,19 @@ function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await loginUser({ email, password });
+  e.preventDefault();
+  try {
+    const res = await loginUser({ email, password });
 
-      // 🔥 THIS IS THE KEY LINE
-      login(res.data.user, res.data.token);
+    // ✅ STORE USER, NOT TOKEN
+    login(res.data.user);
 
-      toast.success("Logged in");
-      navigate("/dashboard");
-    } catch (err) {
-      console.log(err) //error details in console
-      toast.error("Invalid credentials");
-    }
-  };
+    toast.success("Logged in");
+    navigate("/dashboard");
+  } catch {
+    toast.error("Invalid credentials");
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-20">
