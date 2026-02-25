@@ -38,7 +38,7 @@ function TodoCard({ todo, deleteTodo, toggleTodo, editTodo, dragHandleProps }) {
 
       <div className="flex justify-between items-center mt-4">
         <button
-          onClick={() => toggleTodo(todo.id)}
+          onClick={() => toggleTodo(todo._id)}
           className={`text-sm px-3 py-1 rounded-full ${
             todo.completed
               ? "bg-green-100 text-green-700"
@@ -65,12 +65,13 @@ function TodoCard({ todo, deleteTodo, toggleTodo, editTodo, dragHandleProps }) {
             </button>
           )}
 
-          <button
-            onClick={() => deleteTodo(todo.id)}
-            className="text-red-500 hover:underline"
-          >
-            Delete
-          </button>
+          <button onClick={() => deleteTodo(todo._id)}>Delete</button>
+
+          <input
+            type="checkbox"
+            checked={todo.completed}
+            onChange={() => toggleTodo(todo._id)}
+          />
         </div>
       </div>
     </div>

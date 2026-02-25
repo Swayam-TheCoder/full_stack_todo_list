@@ -18,6 +18,5 @@ export const updateTodo = async (todo) => {
 };
 
 export const deleteTodo = async (id) => {
-  const res = await api.delete(`/todos/${id}`);
-  return res.data;
+  await api.delete(`/todos/${id}`);
 };

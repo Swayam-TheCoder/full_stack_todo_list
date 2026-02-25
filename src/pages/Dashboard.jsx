@@ -16,24 +16,6 @@ function Dashboard() {
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!user) {
-      return <p className="text-center mt-20">Loading user...</p>;
-    } // 🔥 DO NOTHING until user exists
-
-    const loadTodos = async () => {
-      try {
-        const data = await getTodos(user._id);
-        setTodos(data);
-      } catch (err) {
-        toast.error("Failed to load todos");
-        console.error(err);
-      }
-    };
-
-    loadTodos();
-  }, [user]); // 🔥 DEPENDS ON USER
-
   /* ---------------- LOAD TODOS ---------------- */
   useEffect(() => {
   if (!user || !user._id) return;
@@ -138,36 +120,53 @@ function Dashboard() {
     }
   };
 
-  const removeTodo = async (id) => {
-    try {
-      await deleteTodo(id);
-      updateTodos(todos.filter((t) => t.id !== id));
-      toast.success("Todo deleted");
-    } catch {
-      toast.error("Delete failed");
-    }
-  };
+  const removeTodo = async (_id) => {
+  try {
+    await deleteTodo(_id);
 
-  const toggleTodo = async (id) => {
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
+    setTodos((prev) => prev.filter((t) => t._id !== _id));
 
+    toast.success("Todo deleted");
+  } catch (err) {
+    console.error(err);
+    toast.error("Delete failed");
+  }
+};
+
+  const toggleTodo = async (_id) => {
+  const todo = todos.find((t) => t._id === _id);
+  if (!todo) return;
+
+  try {
     const updated = await updateTodo({
       ...todo,
       completed: !todo.completed,
     });
 
-    updateTodos(todos.map((t) => (t.id === id ? updated : t)));
-  };
+    setTodos((prev) =>
+      prev.map((t) => (t._id === _id ? updated : t))
+    );
+  } catch {
+    toast.error("Failed to update todo");
+  }
+};
 
-  const editTodo = async (id, title) => {
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
+  const editTodo = async (_id, title) => {
+  const todo = todos.find((t) => t._id === _id);
+  if (!todo) return;
 
+  try {
     const updated = await updateTodo({ ...todo, title });
-    updateTodos(todos.map((t) => (t.id === id ? updated : t)));
+
+    setTodos((prev) =>
+      prev.map((t) => (t._id === _id ? updated : t))
+    );
+
     toast.success("Todo updated");
-  };
+  } catch {
+    toast.error("Update failed");
+  }
+};
 
   /* ---------------- DRAG & DROP ---------------- */
   const handleDragEnd = async (result) => {
