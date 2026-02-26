@@ -206,7 +206,7 @@ function Dashboard() {
         </h1>
 
         {/* Undo / Redo */}
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <button
             onClick={undo}
             disabled={!history.length}
@@ -230,7 +230,7 @@ function Dashboard() {
           >
             Redo ⏩
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* ---------- FILTERS ---------- */}
@@ -242,8 +242,8 @@ function Dashboard() {
             className={`px-5 py-2 rounded-full capitalize font-semibold transition-all
               ${
                 filter === type
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg scale-105"
-                  : "bg-white/60 dark:bg-gray-800/60 backdrop-blur hover:scale-105"
+                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 dark:text-white text-black shadow-lg scale-105"
+                  : "bg-white/60 dark:bg-gray-800/60 backdrop-blur hover:scale-105 dark:text-white text-black"
               }`}
           >
             {type}

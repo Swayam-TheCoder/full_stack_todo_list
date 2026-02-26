@@ -5,7 +5,7 @@ export default function DarkToggle() {
   const [dark, setDark] = useDarkMode();
 
   return (
-    <button onClick={() => setDark(!dark)} className="mr-4">
+    <button onClick={() => setDark(!dark)} className="mr-4 dark:text-white text-black">
       {dark ? <Sun /> : <Moon />}
     </button>
   );

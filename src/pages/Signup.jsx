@@ -20,7 +20,7 @@ function Signup() {
 
   return (
     <form onSubmit={handleSubmit} className="glass max-w-md mx-auto mt-24 p-8 space-y-4">
-      <h2 className="text-2xl font-bold text-center mb-4">Welcome👋</h2>
+      <h2 className="text-2xl font-bold text-center mb-4 dark:text-white text-neon">Welcome👋</h2>
       <input
         placeholder="Name"
         className="input"
