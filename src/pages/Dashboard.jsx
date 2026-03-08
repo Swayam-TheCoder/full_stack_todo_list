@@ -204,33 +204,6 @@ function Dashboard() {
                        bg-clip-text text-transparent">
           My Todos
         </h1>
-
-        {/* Undo / Redo */}
-        {/* <div className="flex gap-3">
-          <button
-            onClick={undo}
-            disabled={!history.length}
-            className="px-4 py-2 rounded-xl font-medium
-                       bg-white/70 dark:bg-gray-800/70 backdrop-blur
-                       shadow hover:shadow-lg hover:scale-105
-                       disabled:opacity-40 disabled:cursor-not-allowed
-                       transition"
-          >
-            Undo ⏪
-          </button>
-
-          <button
-            onClick={redo}
-            disabled={!future.length}
-            className="px-4 py-2 rounded-xl font-medium
-                       bg-white/70 dark:bg-gray-800/70 backdrop-blur
-                       shadow hover:shadow-lg hover:scale-105
-                       disabled:opacity-40 disabled:cursor-not-allowed
-                       transition"
-          >
-            Redo ⏩
-          </button>
-        </div> */}
       </div>
 
       {/* ---------- FILTERS ---------- */}
@@ -274,7 +247,7 @@ function Dashboard() {
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="space-y-5"
+                className="space-y-5 dark:text-white"
               >
                 {filteredTodos.map((todo, index) => (
                   <Draggable
