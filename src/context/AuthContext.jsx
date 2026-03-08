@@ -1,31 +1,43 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import api from "../api/axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // ⭐ important
 
-  // ✅ login with FULL USER OBJECT
   const login = (userData) => {
-    sessionStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
-    sessionStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.error(err);
+    }
     setUser(null);
   };
 
-  // ✅ restore user on refresh
+  // restore user after refresh
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const restoreUser = async () => {
+      try {
+        const res = await api.get("/auth/me");
+        setUser(res.data);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false); // ⭐ stop loading
+      }
+    };
+
+    restoreUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

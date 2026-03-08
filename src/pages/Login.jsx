@@ -72,7 +72,9 @@ function Login() {
       <button className="btn-primary mt-4 w-full neon">
         Login
       </button>
+      <p>swayam2@gmail.com  Swayam0909@</p>
     </form>
+    
   );
 }
 
