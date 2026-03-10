@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
+import PublicRoute from "./components/PublicRoute";
 
 const App = () => {
   return (
@@ -27,8 +28,22 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         {/* Public */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
 
         {/* Protected */}
         <Route
