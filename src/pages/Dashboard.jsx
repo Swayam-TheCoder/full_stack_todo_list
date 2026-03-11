@@ -86,10 +86,14 @@ function Dashboard() {
   const sortedTodos = [...todos].sort((a, b) => a.order - b.order);
 
   const filteredTodos = sortedTodos.filter((todo) => {
-    if (filter === "completed") return todo.completed;
-    if (filter === "pending") return !todo.completed;
-    return true;
-  });
+  if (filter === "completed") return todo.completed;
+  if (filter === "pending") return !todo.completed;
+
+  // 🔥 All should show only active todos
+  if (filter === "all") return !todo.completed;
+
+  return true;
+});
 
   /* ---------------- CRUD ---------------- */
   const addTodo = async (title) => {
@@ -143,9 +147,14 @@ function Dashboard() {
       completed: !todo.completed,
     });
 
-    setTodos((prev) =>
-      prev.map((t) => (t._id === _id ? updated : t))
-    );
+    if (updated.completed) {
+      // ✅ remove completed todo from list
+      setTodos((prev) => prev.filter((t) => t._id !== _id));
+    } else {
+      setTodos((prev) =>
+        prev.map((t) => (t._id === _id ? updated : t))
+      );
+    }
   } catch {
     toast.error("Failed to update todo");
   }

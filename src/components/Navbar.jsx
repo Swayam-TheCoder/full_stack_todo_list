@@ -35,7 +35,7 @@ function Navbar() {
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-3 w-48 glass animate-fade-in rounded-xl shadow-xl">
+                <div className="absolute right-0 mt-3 w-48 glass animate-fade-in rounded-xl shadow-xl dark:text-zinc-300">
                   <div className="px-4 py-3 text-sm border-b border-white/20">
                     Signed in as
                     <div className="font-bold">{user.name}</div>
