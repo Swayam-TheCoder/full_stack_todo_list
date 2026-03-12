@@ -7,8 +7,24 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
 import PublicRoute from "./components/PublicRoute";
+import Loader from "./components/Loader";
+import { useState } from "react";
+import { useEffect } from "react";
 
 const App = () => {
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 1500); // simulate loading
+  }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <Navbar />
